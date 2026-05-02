@@ -1,0 +1,21 @@
+name: Test
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      SYNAPSE_API_KEY: ${{ secrets.SYNAPSE_TEST_API_KEY }}
+      SYNAPSE_WORKSPACE_ID: ${{ secrets.SYNAPSE_TEST_WORKSPACE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+      - run: chmod +x test.sh && bash test.sh
