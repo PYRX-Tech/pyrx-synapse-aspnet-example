@@ -115,7 +115,7 @@ app.MapPost("/api/track/batch", async (HttpContext ctx) =>
                     : new Dictionary<string, object>()
             });
         }
-        var resp = client.TrackBatch(new TrackBatchParams { Events = events });
+        var resp = await client.TrackBatchAsync(new TrackBatchParams { Events = events });
         return Results.Json(resp);
     }
     catch (SynapseException ex)
@@ -129,7 +129,7 @@ app.MapPost("/api/identify", async (HttpContext ctx) =>
     try
     {
         var body = await ctx.Request.ReadFromJsonAsync<JsonElement>();
-        var resp = client.Identify(new IdentifyParams
+        var resp = await client.IdentifyAsync(new IdentifyParams
         {
             ExternalId = body.GetProperty("userId").GetString() ?? "",
             Email = body.TryGetProperty("email", out var email) ? email.GetString() ?? "" : "",
@@ -162,7 +162,7 @@ app.MapPost("/api/identify/batch", async (HttpContext ctx) =>
                     : new Dictionary<string, object>()
             });
         }
-        var resp = client.IdentifyBatch(new IdentifyBatchParams { Contacts = contacts });
+        var resp = await client.IdentifyBatchAsync(new IdentifyBatchParams { Contacts = contacts });
         return Results.Json(resp);
     }
     catch (SynapseException ex)
@@ -179,7 +179,7 @@ app.MapPost("/api/send", async (HttpContext ctx) =>
         var to = body.TryGetProperty("to", out var toEl)
             ? SnakeKeys(JsonElementToDict(toEl))
             : new Dictionary<string, object>();
-        var resp = client.Send(new SendParams
+        var resp = await client.SendAsync(new SendParams
         {
             TemplateSlug = body.GetProperty("templateSlug").GetString() ?? "",
             To = to,
@@ -197,13 +197,13 @@ app.MapPost("/api/send", async (HttpContext ctx) =>
 
 // ── Contacts ──
 
-app.MapGet("/api/contacts", (HttpContext ctx) =>
+app.MapGet("/api/contacts", async (HttpContext ctx) =>
 {
     try
     {
         var page = int.TryParse(ctx.Request.Query["page"], out var p) ? p : 1;
         var perPage = int.TryParse(ctx.Request.Query["limit"], out var pp) ? pp : 20;
-        var resp = client.Contacts.List(new ContactListParams { Page = page, PerPage = perPage });
+        var resp = await client.Contacts.ListAsync(new ContactListParams { Page = page, PerPage = perPage });
         return Results.Json(resp);
     }
     catch (SynapseException ex)
@@ -212,11 +212,11 @@ app.MapGet("/api/contacts", (HttpContext ctx) =>
     }
 });
 
-app.MapGet("/api/contacts/{id}", (string id) =>
+app.MapGet("/api/contacts/{id}", async (string id) =>
 {
     try
     {
-        var resp = client.Contacts.Get(id);
+        var resp = await client.Contacts.GetAsync(id);
         return Results.Json(resp);
     }
     catch (SynapseException ex)
@@ -233,7 +233,7 @@ app.MapPut("/api/contacts/{externalId}", async (string externalId, HttpContext c
         var properties = body.TryGetProperty("properties", out var props)
             ? JsonElementToDict(props)
             : new Dictionary<string, object>();
-        var resp = client.Contacts.Update(externalId, new ContactUpdateParams
+        var resp = await client.Contacts.UpdateAsync(externalId, new ContactUpdateParams
         {
             Properties = properties
         });
@@ -245,11 +245,11 @@ app.MapPut("/api/contacts/{externalId}", async (string externalId, HttpContext c
     }
 });
 
-app.MapDelete("/api/contacts/{externalId}", (string externalId) =>
+app.MapDelete("/api/contacts/{externalId}", async (string externalId) =>
 {
     try
     {
-        client.Contacts.Delete(externalId);
+        await client.Contacts.DeleteAsync(externalId);
         return Results.Json(new { success = true });
     }
     catch (SynapseException ex)
@@ -260,11 +260,11 @@ app.MapDelete("/api/contacts/{externalId}", (string externalId) =>
 
 // ── Templates ──
 
-app.MapGet("/api/templates", () =>
+app.MapGet("/api/templates", async () =>
 {
     try
     {
-        var resp = client.Templates.List();
+        var resp = await client.Templates.ListAsync();
         return Results.Json(resp);
     }
     catch (SynapseException ex)
@@ -278,7 +278,7 @@ app.MapPost("/api/templates", async (HttpContext ctx) =>
     try
     {
         var body = await ctx.Request.ReadFromJsonAsync<JsonElement>();
-        var resp = client.Templates.Create(new TemplateCreateParams
+        var resp = await client.Templates.CreateAsync(new TemplateCreateParams
         {
             Slug = body.GetProperty("slug").GetString() ?? "",
             Name = body.GetProperty("name").GetString() ?? "",
@@ -295,11 +295,11 @@ app.MapPost("/api/templates", async (HttpContext ctx) =>
     }
 });
 
-app.MapGet("/api/templates/{slug}", (string slug) =>
+app.MapGet("/api/templates/{slug}", async (string slug) =>
 {
     try
     {
-        var resp = client.Templates.Get(slug);
+        var resp = await client.Templates.GetAsync(slug);
         return Results.Json(resp);
     }
     catch (SynapseException ex)
@@ -325,7 +325,7 @@ app.MapPut("/api/templates/{slug}", async (string slug, HttpContext ctx) =>
         if (body.TryGetProperty("from_email", out var fe))
             updateParams.FromEmail = fe.GetString() ?? "";
 
-        var resp = client.Templates.Update(slug, updateParams);
+        var resp = await client.Templates.UpdateAsync(slug, updateParams);
         return Results.Json(resp);
     }
     catch (SynapseException ex)
@@ -334,11 +334,11 @@ app.MapPut("/api/templates/{slug}", async (string slug, HttpContext ctx) =>
     }
 });
 
-app.MapDelete("/api/templates/{slug}", (string slug) =>
+app.MapDelete("/api/templates/{slug}", async (string slug) =>
 {
     try
     {
-        client.Templates.Delete(slug);
+        await client.Templates.DeleteAsync(slug);
         return Results.Json(new { success = true });
     }
     catch (SynapseException ex)
@@ -355,7 +355,7 @@ app.MapPost("/api/templates/{slug}/preview", async (string slug, HttpContext ctx
         var contact = body.TryGetProperty("contact", out var ct)
             ? JsonElementToDict(ct)
             : new Dictionary<string, object>();
-        var resp = client.Templates.Preview(slug, new TemplatePreviewParams
+        var resp = await client.Templates.PreviewAsync(slug, new TemplatePreviewParams
         {
             Contact = contact
         });
