@@ -7,7 +7,7 @@ BASE_URL="http://localhost:4014"
 cd "$(dirname "$0")"
 
 echo "Building..."
-dotnet build -q > /dev/null 2>&1
+dotnet build > /dev/null 2>&1
 
 echo "Starting ASP.NET server on port 4014..."
 dotnet run --no-build > /dev/null 2>&1 &
